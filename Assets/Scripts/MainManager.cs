@@ -11,10 +11,15 @@ public class MainManager : MonoBehaviour
     public Rigidbody Ball;
 
     public Text ScoreText;
+    public Text HighScoreText;
     public GameObject GameOverText;
+    public GameObject NewHighScoreScreen;
+    public InputField NameInput;
     
     private bool m_Started = false;
     private int m_Points;
+    private bool m_HighScoreNameTyped = true;
+    private string input;
     
     private bool m_GameOver = false;
 
@@ -22,6 +27,9 @@ public class MainManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        if (HighScore.Instance.PlayerHighScore != 0)
+            HighScoreText.gameObject.SetActive(true);
+        
         const float step = 0.6f;
         int perLine = Mathf.FloorToInt(4.0f / step);
         
@@ -36,6 +44,7 @@ public class MainManager : MonoBehaviour
                 brick.onDestroyed.AddListener(AddPoint);
             }
         }
+        HighScoreText.text = $"{HighScore.Instance.PlayerName} has the greatest score: {HighScore.Instance.PlayerHighScore}";
     }
 
     private void Update()
@@ -53,7 +62,7 @@ public class MainManager : MonoBehaviour
                 Ball.AddForce(forceDir * 2.0f, ForceMode.VelocityChange);
             }
         }
-        else if (m_GameOver)
+        else if (m_GameOver && m_HighScoreNameTyped)
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {
@@ -71,6 +80,22 @@ public class MainManager : MonoBehaviour
     public void GameOver()
     {
         m_GameOver = true;
+        if (m_Points > HighScore.Instance.PlayerHighScore)
+        {
+            HighScore.Instance.PlayerHighScore = m_Points;
+            m_HighScoreNameTyped = false;
+            NewHighScoreScreen.SetActive(true);
+            return;
+        }
         GameOverText.SetActive(true);
+    }
+
+    public void ReadName()
+    {
+        HighScore.Instance.PlayerName = NameInput.text;
+        HighScore.Instance.SavePlayer();
+        NewHighScoreScreen.SetActive(false);
+        GameOverText.SetActive(true);
+        m_HighScoreNameTyped = true;
     }
 }
